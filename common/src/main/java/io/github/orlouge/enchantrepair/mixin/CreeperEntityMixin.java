@@ -22,22 +22,22 @@ import java.util.Map;
 
 @Mixin(CreeperEntity.class)
 public class CreeperEntityMixin extends HostileEntity {
-    @Shadow @Final private static TrackedData<Boolean> CHARGED;
+//    @Shadow @Final private static TrackedData<Boolean> CHARGED;
 
     protected CreeperEntityMixin(EntityType<? extends HostileEntity> entityType, World world) {
         super(entityType, world);
     }
 
-    @Inject(method = "dropEquipment", at = @At("HEAD"))
-    public void dropBlastProtIfCharged(DamageSource source, int lootingMultiplier, boolean allowDrops, CallbackInfo ci) {
-        if (!Config.CHARGED_CREEPER_DROPS_BLAST_PROT) return;
-        if (this.dataTracker.get(CHARGED) && this.getRandom().nextFloat() < 0.5 + 0.2 * lootingMultiplier) {
-            ItemStack book = new ItemStack(Items.ENCHANTED_BOOK);
-            EnchantmentHelper.set(Map.of(
-                    Enchantments.BLAST_PROTECTION,
-                    Math.min(4, this.getRandom().nextInt(4 + lootingMultiplier) + 1)
-            ), book);
-            this.dropStack(book);
-        }
-    }
+//    @Inject(method = "dropEquipment", at = @At("HEAD"))
+//    public void dropBlastProtIfCharged(DamageSource source, int lootingMultiplier, boolean allowDrops, CallbackInfo ci) {
+//        if (!Config.CHARGED_CREEPER_DROPS_BLAST_PROT) return;
+//        if (this.dataTracker.get(CHARGED) && this.getRandom().nextFloat() < 0.5 + 0.2 * lootingMultiplier) {
+//            ItemStack book = new ItemStack(Items.ENCHANTED_BOOK);
+//            EnchantmentHelper.set(Map.of(
+//                    Enchantments.BLAST_PROTECTION,
+//                    Math.min(4, this.getRandom().nextInt(4 + lootingMultiplier) + 1)
+//            ), book);
+//            this.dropStack(book);
+//        }
+//    }
 }

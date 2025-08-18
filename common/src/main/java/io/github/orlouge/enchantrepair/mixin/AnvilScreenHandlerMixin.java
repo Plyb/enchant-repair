@@ -1,6 +1,8 @@
 package io.github.orlouge.enchantrepair.mixin;
 
 import io.github.orlouge.enchantrepair.Config;
+import io.github.orlouge.enchantrepair.ModifiedEnchantingHelper;
+import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
@@ -9,7 +11,10 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.registry.tag.EnchantmentTags;
 import net.minecraft.screen.*;
+import net.minecraft.screen.slot.ForgingSlotsManager;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
@@ -40,8 +45,8 @@ public abstract class AnvilScreenHandlerMixin extends ForgingScreenHandler {
     private boolean isRename = false;
     private boolean modifiersApplied = false;
 
-    public AnvilScreenHandlerMixin(@Nullable ScreenHandlerType<?> type, int syncId, PlayerInventory playerInventory, ScreenHandlerContext context) {
-        super(type, syncId, playerInventory, context);
+    public AnvilScreenHandlerMixin(@Nullable ScreenHandlerType<?> type, int syncId, PlayerInventory playerInventory, ScreenHandlerContext context, ForgingSlotsManager forgingSlotsManager) {
+        super(type, syncId, playerInventory, context, forgingSlotsManager);
     }
 
     @Inject(method = "updateResult", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;copy()Lnet/minecraft/item/ItemStack;"), cancellable = true)
@@ -49,8 +54,9 @@ public abstract class AnvilScreenHandlerMixin extends ForgingScreenHandler {
         ItemStack input = this.input.getStack(0);
         ItemStack repair = this.input.getStack(1);
         boolean isRepairingOrMerging = !repair.isEmpty() && (input.isDamageable() || input.isOf(Items.ENCHANTED_BOOK));
-        boolean nonDisposable = Config.REPAIR_VANISHING || EnchantmentHelper.getLevel(Enchantments.VANISHING_CURSE, input) <= 0;
-        boolean repairable = input.isDamageable() && this.canRepairExtended(input.getItem(), input, repair) && nonDisposable;
+        boolean nonDisposable = Config.REPAIR_VANISHING
+                || !ModifiedEnchantingHelper.HasEnchantment(input, Enchantments.VANISHING_CURSE);
+        boolean repairable = input.isDamageable() && this.canRepairExtended(input, repair) && nonDisposable;
         boolean mergeable = (this.player.isCreative() && Config.ALLOW_CREATIVE_ANVIL_MERGE) || Config.ALLOW_SURVIVAL_ANVIL_MERGE;
         if (isRepairingOrMerging && !repairable && !mergeable) {
             this.output.setStack(0, ItemStack.EMPTY);
@@ -71,10 +77,10 @@ public abstract class AnvilScreenHandlerMixin extends ForgingScreenHandler {
         return Config.REPAIR_CHEAP ? dmg : Math.min(dmg, maxDmg4);
     }
 
-    @Redirect(method = "updateResult", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;canRepair(Lnet/minecraft/item/ItemStack;Lnet/minecraft/item/ItemStack;)Z"))
-    public boolean canRepairExtended(Item item, ItemStack stack, ItemStack ingredient) {
-        if (item.canRepair(stack, ingredient)) return true;
-        Set<Item> extraRepairItems = Config.REPAIR_EXTRA_ITEMS.get().get(item);
+    @Redirect(method = "updateResult", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;canRepairWith(Lnet/minecraft/item/ItemStack;)Z"))
+    public boolean canRepairExtended(ItemStack stack, ItemStack ingredient) {
+        if (stack.canRepairWith(ingredient)) return true;
+        Set<Item> extraRepairItems = Config.REPAIR_EXTRA_ITEMS.get().get(stack.getItem());
         return extraRepairItems != null && extraRepairItems.contains(ingredient.getItem());
     }
 
@@ -100,8 +106,8 @@ public abstract class AnvilScreenHandlerMixin extends ForgingScreenHandler {
         this.isRename = item2.isEmpty();
         if (this.repairItemUsage <= 0) return;
         ItemStack item1 = this.input.getStack(0);
-        if (!item1.isEmpty() && (item1.isDamageable() || item1.isEnchantable()) && !item2.isEmpty() && this.canRepairExtended(item1.getItem(), item1, item2)) {
-            boolean hasMending = EnchantmentHelper.getLevel(Enchantments.MENDING, item1) > 0;
+        if (!item1.isEmpty() && (item1.isDamageable() || item1.isEnchantable()) && !item2.isEmpty() && this.canRepairExtended(item1, item2)) {
+            boolean hasMending = ModifiedEnchantingHelper.HasEnchantment(item1, Enchantments.MENDING);
             float levelScaled = (float) Math.max(1, player.experienceLevel * Math.sqrt(player.experienceLevel));
             float consumeChance = 1.65f * Config.REPAIR_CONSUME_CHANCE / levelScaled;
             float failChance = Config.REPAIR_CONSUME_CHANCE > 0 ? Config.REPAIR_FAIL_CHANCE / Config.REPAIR_CONSUME_CHANCE : 0f;
@@ -117,7 +123,7 @@ public abstract class AnvilScreenHandlerMixin extends ForgingScreenHandler {
                     if (player.getRandom().nextFloat() < failChance) {
                         result.setDamage(result.getMaxDamage() - 1);
                         this.context.run((world, pos) -> world.playSound(null, pos,
-                                SoundEvents.ENTITY_ITEM_BREAK, SoundCategory.BLOCKS, 1.5F, 1.2F));
+                                SoundEvents.ENTITY_ITEM_BREAK.value(), SoundCategory.BLOCKS, 1.5F, 1.2F));
                         return;
                     }
                 }
@@ -127,16 +133,16 @@ public abstract class AnvilScreenHandlerMixin extends ForgingScreenHandler {
             if (hasMending) disenchantChance *= 0.2;
             if (failChance > 0) disenchantChance /= failChance;
             disenchantChance = Math.min(0.3f, disenchantChance);
-            Map<Enchantment, Integer> enchantments = new LinkedHashMap<>(EnchantmentHelper.get(result));
+            Set<RegistryEntry<Enchantment>> enchantments = result.getEnchantments().getEnchantments();
             if (player.getRandom().nextFloat() < disenchantChance) {
-                ArrayList<Enchantment> choiceList = new ArrayList<>();
-                enchantments.forEach((ench, level) -> { if (!ench.isCursed() && !ench.isTreasure()) for (int i = 0; i < level; i++) choiceList.add(ench);});
+                ArrayList<RegistryEntry<Enchantment>> choiceList = new ArrayList<>();
+                enchantments.forEach(ench -> { if (!ench.isIn(EnchantmentTags.CURSE) && !ench.isIn(EnchantmentTags.TREASURE)) for (int i = 0; i < EnchantmentHelper.getLevel(ench, result); i++) choiceList.add(ench);});
                 if (choiceList.size() == 0) return;
-                Enchantment lost = choiceList.get(player.getRandom().nextInt(choiceList.size()));
-                int level = enchantments.get(lost);
-                if (level <= 1) enchantments.remove(lost);
-                else enchantments.put(lost, level - 1);
-                EnchantmentHelper.set(enchantments, result);
+                RegistryEntry<Enchantment> lost = choiceList.get(player.getRandom().nextInt(choiceList.size()));
+                int level = EnchantmentHelper.getLevel(lost, result);
+                var builder = new ItemEnchantmentsComponent.Builder(result.getEnchantments());
+                builder.set(lost, level - 1);
+                EnchantmentHelper.set(result, builder.build());
                 this.context.run((world, pos) -> world.playSound(null, pos,
                         SoundEvents.BLOCK_GRINDSTONE_USE, SoundCategory.BLOCKS, 1.5F, 1.5F));
             }

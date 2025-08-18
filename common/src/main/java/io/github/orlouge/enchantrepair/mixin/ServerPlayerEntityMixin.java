@@ -14,18 +14,18 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ServerPlayerEntity.class)
 public abstract class ServerPlayerEntityMixin extends PlayerEntity {
-    @Shadow public abstract void addExperienceLevels(int levels);
+//    @Shadow public abstract void addExperienceLevels(int levels);
 
     public ServerPlayerEntityMixin(World world, BlockPos pos, float yaw, GameProfile gameProfile) {
         super(world, pos, yaw, gameProfile);
     }
 
-    @Inject(method = "copyFrom", at = @At(value = "HEAD"))
-    public void preserveExperienceOnCopy(ServerPlayerEntity oldPlayer, boolean alive, CallbackInfo ci) {
-        if (Config.XP_LEVELS_LOST_ON_DEATH >= 0) {
-            this.experienceLevel = oldPlayer.experienceLevel;
-            this.experienceProgress = oldPlayer.experienceProgress;
-            if (Config.XP_LEVELS_LOST_ON_DEATH > 0) this.addExperienceLevels(-Config.XP_LEVELS_LOST_ON_DEATH);
-        }
-    }
+//    @Inject(method = "copyFrom", at = @At(value = "HEAD"))
+//    public void preserveExperienceOnCopy(ServerPlayerEntity oldPlayer, boolean alive, CallbackInfo ci) {
+//        if (Config.XP_LEVELS_LOST_ON_DEATH >= 0) {
+//            this.experienceLevel = oldPlayer.experienceLevel;
+//            this.experienceProgress = oldPlayer.experienceProgress;
+//            if (Config.XP_LEVELS_LOST_ON_DEATH > 0) this.addExperienceLevels(-Config.XP_LEVELS_LOST_ON_DEATH);
+//        }
+//    }
 }

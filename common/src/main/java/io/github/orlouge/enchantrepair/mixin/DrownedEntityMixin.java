@@ -30,13 +30,13 @@ public class DrownedEntityMixin extends ZombieEntity {
         super(world);
     }
 
-    @Inject(method = "initEquipment", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/entity/mob/DrownedEntity;equipStack(Lnet/minecraft/entity/EquipmentSlot;Lnet/minecraft/item/ItemStack;)V"))
-    public void equipLoyalty(Random random, LocalDifficulty localDifficulty, CallbackInfo ci) {
-        if (Config.DROWNED_SPAWNS_WITH_LOYALTY && random.nextInt(5) == 0) {
-            ItemStack book = new ItemStack(Items.ENCHANTED_BOOK);
-            EnchantmentHelper.set(Map.of(Enchantments.LOYALTY, random.nextInt(3) + 1), book);
-            this.equipStack(EquipmentSlot.OFFHAND, book);
-            this.updateDropChances(EquipmentSlot.OFFHAND);
-        }
-    }
+//    @Inject(method = "initEquipment", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/entity/mob/DrownedEntity;equipStack(Lnet/minecraft/entity/EquipmentSlot;Lnet/minecraft/item/ItemStack;)V"))
+//    public void equipLoyalty(Random random, LocalDifficulty localDifficulty, CallbackInfo ci) {
+//        if (Config.DROWNED_SPAWNS_WITH_LOYALTY && random.nextInt(5) == 0) {
+//            ItemStack book = new ItemStack(Items.ENCHANTED_BOOK);
+//            EnchantmentHelper.set(Map.of(Enchantments.LOYALTY, random.nextInt(3) + 1), book);
+//            this.equipStack(EquipmentSlot.OFFHAND, book);
+//            this.updateDropChances(EquipmentSlot.OFFHAND);
+//        }
+//    }
 }

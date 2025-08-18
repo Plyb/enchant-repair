@@ -12,11 +12,11 @@ public class ExampleModFabric implements ModInitializer {
     @Override
     public void onInitialize() {
         EnchantRepairMod.init();
-        LootTableEvents.MODIFY.register(((resourceManager, lootManager, id, tableBuilder, source) -> {
-            Collection<LootPool.Builder> pools = ModifiedLootTables.POOLS.get(id);
-            if (pools != null) {
-                pools.forEach(tableBuilder::pool);
-            }
-        }));
+//        LootTableEvents.MODIFY.register(((resourceManager, lootManager, id, tableBuilder, source) -> {
+//            Collection<LootPool.Builder> pools = ModifiedLootTables.POOLS.get(id);
+//            if (pools != null) {
+//                pools.forEach(tableBuilder::pool);
+//            }
+//        }));
     }
 }

@@ -1,25 +1,20 @@
 package io.github.orlouge.enchantrepair.mixin;
 
-import io.github.orlouge.enchantrepair.Config;
-import net.minecraft.item.BookItem;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Slice;
 
-@Mixin(BookItem.class)
-public class BookItemMixin extends Item {
-    public BookItemMixin(Settings settings) {
-        super(settings);
-    }
+import static net.minecraft.item.Items.register;
 
-    @Inject(method = "isEnchantable", at = @At("RETURN"), cancellable = true)
-    public void isEnchantable(ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
-        if (Config.DISABLE_ENCHANTING_BOOKS) {
-            cir.setReturnValue(false);
-            cir.cancel();
-        }
+@Mixin(Items.class)
+public class BookItemMixin {
+    @Redirect(method = "<clinit>", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Items;register(Ljava/lang/String;Lnet/minecraft/item/Item$Settings;)Lnet/minecraft/item/Item;", ordinal = 0), slice = @Slice(from = @At(value = "FIELD",
+            target = "Lnet/minecraft/item/Items;PAPER:Lnet/minecraft/item/Item;")))
+    private static Item noBookEnchant(String id, Item.Settings settings) {
+        return register("book");
+
     }
 }

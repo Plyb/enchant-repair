@@ -11,11 +11,11 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 @Mixin(targets = "net/minecraft/village/TradeOffers$SellEnchantedToolFactory")
 public class SellEnchantedToolFactory {
-    @ModifyVariable(method = "create", at = @At(value = "STORE", ordinal = 0))
-    public ItemStack addCurseOfVanishing(ItemStack stack, Entity entity, Random random) {
-        if (Config.CURSE_TRADED_TOOLS) {
-            stack.addEnchantment(Enchantments.VANISHING_CURSE, 1);
-        }
-        return stack;
-    }
+//    @ModifyVariable(method = "create", at = @At(value = "STORE", ordinal = 0))
+//    public ItemStack addCurseOfVanishing(ItemStack stack, Entity entity, Random random) {
+//        if (Config.CURSE_TRADED_TOOLS) {
+//            stack.addEnchantment(Enchantments.VANISHING_CURSE, 1);
+//        }
+//        return stack;
+//    }
 }

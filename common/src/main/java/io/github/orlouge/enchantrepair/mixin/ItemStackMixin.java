@@ -9,8 +9,8 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(ItemStack.class)
 public class ItemStackMixin {
-    @Redirect(method = "isEnchantable", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;hasEnchantments()Z"))
-    public boolean cursedItemsAreEnchantable(ItemStack stack) {
-        return EnchantmentHelper.get(stack).keySet().stream().anyMatch(ench -> !ench.isCursed() || ench == Enchantments.VANISHING_CURSE);
-    }
+//    @Redirect(method = "isEnchantable", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;hasEnchantments()Z"))
+//    public boolean cursedItemsAreEnchantable(ItemStack stack) {
+//        return EnchantmentHelper.get(stack).keySet().stream().anyMatch(ench -> !ench.isCursed() || ench == Enchantments.VANISHING_CURSE);
+//    }
 }

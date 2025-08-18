@@ -10,11 +10,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ExperienceOrbEntity.class)
 public class ExperienceOrbEntityMixin {
-	@Inject(at = @At("HEAD"), method = "repairPlayerGears", cancellable = true)
-	private void onRepairPlayerGears(PlayerEntity player, int amount, CallbackInfoReturnable<Integer> info) {
-		if (Config.DISABLE_MENDING_XP_REPAIR) {
-			info.setReturnValue(amount);
-			info.cancel();
-		}
-	}
+//	@Inject(at = @At("HEAD"), method = "repairPlayerGears", cancellable = true)
+//	private void onRepairPlayerGears(PlayerEntity player, int amount, CallbackInfoReturnable<Integer> info) {
+//		if (Config.DISABLE_MENDING_XP_REPAIR) {
+//			info.setReturnValue(amount);
+//			info.cancel();
+//		}
+//	}
 }

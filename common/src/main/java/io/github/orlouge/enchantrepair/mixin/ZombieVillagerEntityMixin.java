@@ -27,7 +27,7 @@ import java.util.Map;
 
 @Mixin(ZombieVillagerEntity.class)
 public abstract class ZombieVillagerEntityMixin extends ZombieEntity {
-    @Shadow public abstract VillagerData getVillagerData();
+//    @Shadow public abstract VillagerData getVillagerData();
 
     public ZombieVillagerEntityMixin(EntityType<? extends ZombieEntity> entityType, World world) {
         super(entityType, world);
@@ -37,18 +37,18 @@ public abstract class ZombieVillagerEntityMixin extends ZombieEntity {
         super(world);
     }
 
-    @Inject(method = "initialize", at = @At("HEAD"))
-    public void setBookOnInitialize(ServerWorldAccess world, LocalDifficulty difficulty, SpawnReason spawnReason, EntityData entityData, NbtCompound entityNbt, CallbackInfoReturnable<EntityData> cir) {
-        if (
-            Config.ZOMBIE_LIBRARIAN_SPAWNS_WITH_SWEEPING &&
-            spawnReason == SpawnReason.NATURAL &&
-            world.getRandom().nextInt(2) == 0 &&
-            this.getVillagerData().getProfession().id().equals(VillagerProfession.LIBRARIAN.id())
-        ) {
-            ItemStack book = new ItemStack(Items.ENCHANTED_BOOK);
-            EnchantmentHelper.set(Map.of(Enchantments.SWEEPING, 3), book);
-            this.equipStack(EquipmentSlot.OFFHAND, book);
-            this.updateDropChances(EquipmentSlot.OFFHAND);
-        }
-    }
+//    @Inject(method = "initialize", at = @At("HEAD"))
+//    public void setBookOnInitialize(ServerWorldAccess world, LocalDifficulty difficulty, SpawnReason spawnReason, EntityData entityData, NbtCompound entityNbt, CallbackInfoReturnable<EntityData> cir) {
+//        if (
+//            Config.ZOMBIE_LIBRARIAN_SPAWNS_WITH_SWEEPING &&
+//            spawnReason == SpawnReason.NATURAL &&
+//            world.getRandom().nextInt(2) == 0 &&
+//            this.getVillagerData().getProfession().id().equals(VillagerProfession.LIBRARIAN.id())
+//        ) {
+//            ItemStack book = new ItemStack(Items.ENCHANTED_BOOK);
+//            EnchantmentHelper.set(Map.of(Enchantments.SWEEPING, 3), book);
+//            this.equipStack(EquipmentSlot.OFFHAND, book);
+//            this.updateDropChances(EquipmentSlot.OFFHAND);
+//        }
+//    }
 }
