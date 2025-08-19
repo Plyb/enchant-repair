@@ -75,25 +75,33 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
             ci.cancel();
         }
     }
+    @Mixin(targets = "net.minecraft.screen.GrindstoneScreenHandler$3")
+    public static class SecondSlotMixin extends Slot {
+        public SecondSlotMixin(Inventory inventory, int index, int x, int y) {
+            super(inventory, index, x, y);
+        }
 
-    @Redirect(method = "<init>(ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/screen/ScreenHandlerContext;)V", at = @At(value="INVOKE", target = "Lnet/minecraft/screen/GrindstoneScreenHandler;addSlot(Lnet/minecraft/screen/slot/Slot;)Lnet/minecraft/screen/slot/Slot;", ordinal = 1))
-    public Slot canInsertBook(GrindstoneScreenHandler screenHandler, Slot slot) {
-        return addSlot(new Slot(slot.inventory, slot.getIndex(), slot.x, slot.y) {
+        @Inject(method = "canInsert(Lnet/minecraft/item/ItemStack;)Z", at = @At("RETURN"), cancellable = true)
+        public void canInsertBook(ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
+            cir.setReturnValue(cir.getReturnValue() || (Config.GRINDSTONE_EXTRACT_TREASURE && stack.isOf(Items.BOOK)));
+        }
+
+            /*
             @Override
-            public boolean canInsert(ItemStack stack) {
-                return super.canInsert(stack) || (Config.GRINDSTONE_EXTRACT_TREASURE && stack.isOf(Items.BOOK));
+            public int getMaxItemCount(ItemStack stack) {
+                return stack.isOf(Items.BOOK) ? Math.min(1, super.getMaxItemCount(stack)) : super.getMaxItemCount(stack);
             }
-        });
+             */
     }
 
-//    @Mixin(targets = "net.minecraft.screen.GrindstoneScreenHandler$4")
-//    public static class ResultSlotMixin {
-//        @Inject(method = "getExperience(Lnet/minecraft/item/ItemStack;)I", at = @At("HEAD"), cancellable = true)
-//        public void nullExperience(ItemStack stack, CallbackInfoReturnable<Integer> cir) {
-//            if (Config.GRINDSTONE_DISABLE_XP) {
-//                cir.setReturnValue(0);
-//                cir.cancel();
-//            }
-//        }
-//    }
+    @Mixin(targets = "net.minecraft.screen.GrindstoneScreenHandler$4")
+    public static class ResultSlotMixin {
+        @Inject(method = "getExperience(Lnet/minecraft/item/ItemStack;)I", at = @At("HEAD"), cancellable = true)
+        public void nullExperience(ItemStack stack, CallbackInfoReturnable<Integer> cir) {
+            if (Config.GRINDSTONE_DISABLE_XP) {
+                cir.setReturnValue(0);
+                cir.cancel();
+            }
+        }
+    }
 }
