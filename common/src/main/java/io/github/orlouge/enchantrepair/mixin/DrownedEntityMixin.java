@@ -8,7 +8,6 @@ import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentDropChances;
 import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.mob.DrownedEntity;
 import net.minecraft.entity.mob.ZombieEntity;
 import net.minecraft.item.ItemStack;
@@ -22,8 +21,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.util.Map;
 
 @Mixin(DrownedEntity.class)
 public class DrownedEntityMixin extends ZombieEntity {

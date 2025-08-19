@@ -4,7 +4,6 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.block.ChiseledBookshelfBlock;
 import net.minecraft.block.EnchantingTableBlock;
 import net.minecraft.block.entity.ChiseledBookshelfBlockEntity;
-import net.minecraft.component.ComponentType;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.enchantment.Enchantment;

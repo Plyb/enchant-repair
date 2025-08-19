@@ -2,7 +2,6 @@ package io.github.orlouge.enchantrepair.mixin;
 
 import io.github.orlouge.enchantrepair.Config;
 import net.minecraft.entity.ExperienceOrbEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

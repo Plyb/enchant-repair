@@ -3,7 +3,6 @@ package io.github.orlouge.enchantrepair.mixin;
 import io.github.orlouge.enchantrepair.Config;
 import io.github.orlouge.enchantrepair.ModifiedGrindstoneHelper;
 import net.minecraft.component.type.ItemEnchantmentsComponent;
-import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;

@@ -1,7 +1,6 @@
 package io.github.orlouge.enchantrepair.mixin;
 
 import net.minecraft.component.type.ItemEnchantmentsComponent;
-import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.tag.EnchantmentTags;
