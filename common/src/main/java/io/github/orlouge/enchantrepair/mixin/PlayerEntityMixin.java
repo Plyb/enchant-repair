@@ -16,25 +16,25 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(PlayerEntity.class)
 public abstract class PlayerEntityMixin extends LivingEntity {
-//    @Shadow
-//    protected int enchantmentTableSeed;
-//
+    @Shadow
+    protected int enchantingTableSeed;
+
     @Shadow public float experienceProgress;
 
     @Shadow public int experienceLevel;
-//
+
     protected PlayerEntityMixin(EntityType<? extends LivingEntity> entityType, World world) {
         super(entityType, world);
     }
-//
-//    @Inject(method = "applyEnchantmentCosts", at = @At("HEAD"), cancellable = true)
-//    public void onEnchantmentCostApplied(ItemStack enchantedItem, int experienceLevels, CallbackInfo ci) {
-//        if (Config.DISABLE_ENCHANTING_XP_COST) {
-//            this.enchantmentTableSeed = this.random.nextInt();
-//            ci.cancel();
-//        }
-//    }
-//
+
+    @Inject(method = "applyEnchantmentCosts", at = @At("HEAD"), cancellable = true)
+    public void onEnchantmentCostApplied(ItemStack enchantedItem, int experienceLevels, CallbackInfo ci) {
+        if (Config.DISABLE_ENCHANTING_XP_COST) {
+            this.enchantingTableSeed = this.random.nextInt();
+            ci.cancel();
+        }
+    }
+
     @Inject(method = "getExperienceToDrop", at = @At("RETURN"), cancellable = true)
     public void setXpToDrop(ServerWorld world, CallbackInfoReturnable<Integer> cir) {
         if (Config.XP_LEVELS_LOST_ON_DEATH >= 0) {
