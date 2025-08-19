@@ -2,11 +2,13 @@ package io.github.orlouge.enchantrepair.mixin;
 
 import io.github.orlouge.enchantrepair.Config;
 import io.github.orlouge.enchantrepair.ModifiedGrindstoneHelper;
+import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.registry.tag.EnchantmentTags;
 import net.minecraft.screen.GrindstoneScreenHandler;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.ScreenHandlerType;
@@ -22,33 +24,38 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 @Mixin(GrindstoneScreenHandler.class)
 public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
-//    @Shadow @Final Inventory input;
-//
-//    @Shadow @Final private Inventory result;
+    @Shadow @Final Inventory input;
+
+    @Shadow @Final private Inventory result;
 
     protected GrindstoneScreenHandlerMixin(ScreenHandlerType<?> type, int syncId) {
         super(type, syncId);
     }
 
-//    @Redirect(method = "grind", at = @At(value = "INVOKE", target = "Ljava/util/stream/Stream;filter(Ljava/util/function/Predicate;)Ljava/util/stream/Stream;"))
-//    public Stream<Map.Entry<Enchantment, Integer>> keepTreasureEnchantments(Stream<Map.Entry<Enchantment, Integer>> stream, Predicate<? super Map.Entry<Enchantment, Integer>> defaultFilter) {
-//        if (Config.GRINDSTONE_DISENCHANT_KEEP_TREASURE) {
-//            Map<Enchantment, Integer> result = new LinkedHashMap<>();
-//            boolean[] hasNonTreasure = new boolean[] {false};
-//            stream.forEach(entry -> {
-//                if (defaultFilter.test(entry) || entry.getKey().isTreasure()) result.put(entry.getKey(), entry.getValue());
-//                else hasNonTreasure[0] = true;
-//            });
-//            return hasNonTreasure[0] ? result.entrySet().stream() : result.entrySet().stream().filter(defaultFilter);
-//        }
-//        return stream.filter(defaultFilter);
-//    }
-//
+    @Redirect(method = "grind", at = @At(value = "INVOKE", target = "Lnet/minecraft/enchantment/EnchantmentHelper;apply(Lnet/minecraft/item/ItemStack;Ljava/util/function/Consumer;)Lnet/minecraft/component/type/ItemEnchantmentsComponent;"))
+    public ItemEnchantmentsComponent keepTreasureEnchantments(ItemStack itemStack, Consumer<ItemEnchantmentsComponent.Builder> defaultApplier) {
+        if (Config.GRINDSTONE_DISENCHANT_KEEP_TREASURE) {
+            boolean hasNonTreasure = itemStack.getEnchantments().getEnchantments()
+                    .stream().anyMatch(enchEntry ->
+                            !enchEntry.isIn(EnchantmentTags.TREASURE) && !enchEntry.isIn(EnchantmentTags.CURSE)
+                    );
+            if (hasNonTreasure) {
+                return EnchantmentHelper.apply(itemStack, (components) -> {
+                    components.remove((enchantment) -> {
+                        return !enchantment.isIn(EnchantmentTags.CURSE) && !enchantment.isIn(EnchantmentTags.TREASURE);
+                    });
+                });
+            }
+        }
+        return EnchantmentHelper.apply(itemStack, defaultApplier);
+    }
+
 //    @Inject(method = "updateResult", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;getCount()I", ordinal = 0), cancellable = true)
 //    public void updateResultWithBook(CallbackInfo ci) {
 //        if (!Config.GRINDSTONE_EXTRACT_TREASURE) return;
@@ -68,34 +75,34 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
 //            ci.cancel();
 //        }
 //    }
-//
-//    @Mixin(targets = "net.minecraft.screen.GrindstoneScreenHandler$3")
-//    public static class SecondSlotMixin extends Slot {
-//        public SecondSlotMixin(Inventory inventory, int index, int x, int y) {
-//            super(inventory, index, x, y);
-//        }
-//
-//        @Inject(method = "canInsert(Lnet/minecraft/item/ItemStack;)Z", at = @At("RETURN"), cancellable = true)
-//        public void canInsertBook(ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
-//            cir.setReturnValue(cir.getReturnValue() || (Config.GRINDSTONE_EXTRACT_TREASURE && stack.isOf(Items.BOOK)));
-//        }
-//
-//        /*
-//        @Override
-//        public int getMaxItemCount(ItemStack stack) {
-//            return stack.isOf(Items.BOOK) ? Math.min(1, super.getMaxItemCount(stack)) : super.getMaxItemCount(stack);
-//        }
-//         */
-//    }
-//
-//    @Mixin(targets = "net.minecraft.screen.GrindstoneScreenHandler$4")
-//    public static class ResultSlotMixin {
-//        @Inject(method = "getExperience(Lnet/minecraft/item/ItemStack;)I", at = @At("HEAD"), cancellable = true)
-//        public void nullExperience(ItemStack stack, CallbackInfoReturnable<Integer> cir) {
-//            if (Config.GRINDSTONE_DISABLE_XP) {
-//                cir.setReturnValue(0);
-//                cir.cancel();
-//            }
-//        }
-//    }
+
+    @Mixin(targets = "net.minecraft.screen.GrindstoneScreenHandler$3")
+    public static class SecondSlotMixin extends Slot {
+        public SecondSlotMixin(Inventory inventory, int index, int x, int y) {
+            super(inventory, index, x, y);
+        }
+
+        @Inject(method = "canInsert(Lnet/minecraft/item/ItemStack;)Z", at = @At("RETURN"), cancellable = true)
+        public void canInsertBook(ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
+            cir.setReturnValue(cir.getReturnValue() || (Config.GRINDSTONE_EXTRACT_TREASURE && stack.isOf(Items.BOOK)));
+        }
+
+        /*
+        @Override
+        public int getMaxItemCount(ItemStack stack) {
+            return stack.isOf(Items.BOOK) ? Math.min(1, super.getMaxItemCount(stack)) : super.getMaxItemCount(stack);
+        }
+         */
+    }
+
+    @Mixin(targets = "net.minecraft.screen.GrindstoneScreenHandler$4")
+    public static class ResultSlotMixin {
+        @Inject(method = "getExperience(Lnet/minecraft/item/ItemStack;)I", at = @At("HEAD"), cancellable = true)
+        public void nullExperience(ItemStack stack, CallbackInfoReturnable<Integer> cir) {
+            if (Config.GRINDSTONE_DISABLE_XP) {
+                cir.setReturnValue(0);
+                cir.cancel();
+            }
+        }
+    }
 }
