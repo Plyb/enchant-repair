@@ -47,62 +47,53 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
                     );
             if (hasNonTreasure) {
                 return EnchantmentHelper.apply(itemStack, (components) -> {
-                    components.remove((enchantment) -> {
-                        return !enchantment.isIn(EnchantmentTags.CURSE) && !enchantment.isIn(EnchantmentTags.TREASURE);
-                    });
+                    components.remove((enchantment) ->
+                            !enchantment.isIn(EnchantmentTags.CURSE) && !enchantment.isIn(EnchantmentTags.TREASURE));
                 });
             }
         }
         return EnchantmentHelper.apply(itemStack, defaultApplier);
     }
 
-//    @Inject(method = "updateResult", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;getCount()I", ordinal = 0), cancellable = true)
-//    public void updateResultWithBook(CallbackInfo ci) {
-//        if (!Config.GRINDSTONE_EXTRACT_TREASURE) return;
-//        ItemStack tool = this.input.getStack(0);
-//        ItemStack book = this.input.getStack(1);
-//        if (book.isOf(Items.BOOK)) {
-//            ItemStack result = ItemStack.EMPTY;
-//            if (!tool.isEmpty() && !book.isEmpty() && !book.hasNbt() && tool.getCount() == 1 && tool.hasEnchantments()) {
-//                Map<Enchantment, Integer> transfer = ModifiedGrindstoneHelper.filterEnchantments(tool, false, true, false);
-//                if (transfer != null && transfer.size() > 0) {
-//                    result = new ItemStack(Items.ENCHANTED_BOOK);
-//                    EnchantmentHelper.set(transfer, result);
-//                }
+    @Inject(method = "updateResult", at = @At(value = "INVOKE", target = "Lnet/minecraft/inventory/Inventory;setStack(ILnet/minecraft/item/ItemStack;)V"), cancellable = true)
+    public void updateResultWithBook(CallbackInfo ci) {
+        if (!Config.GRINDSTONE_EXTRACT_TREASURE) return;
+        ItemStack tool = this.input.getStack(0);
+        ItemStack book = this.input.getStack(1);
+        if (book.isOf(Items.BOOK)) {
+            ItemStack result = ItemStack.EMPTY;
+            boolean isSimpleBook = book.getComponentChanges().isEmpty();
+            if (!tool.isEmpty() && !book.isEmpty() && isSimpleBook && tool.getCount() == 1 && tool.hasEnchantments()) {
+                ItemEnchantmentsComponent transfer = ModifiedGrindstoneHelper.filterEnchantments(tool, false, true, false);
+                if (transfer != null && !transfer.isEmpty()) {
+                    result = new ItemStack(Items.ENCHANTED_BOOK);
+                    EnchantmentHelper.set(result, transfer);
+                }
+            }
+            this.result.setStack(0, result);
+            this.sendContentUpdates();
+            ci.cancel();
+        }
+    }
+
+    @Redirect(method = "<init>(ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/screen/ScreenHandlerContext;)V", at = @At(value="INVOKE", target = "Lnet/minecraft/screen/GrindstoneScreenHandler;addSlot(Lnet/minecraft/screen/slot/Slot;)Lnet/minecraft/screen/slot/Slot;", ordinal = 1))
+    public Slot canInsertBook(GrindstoneScreenHandler screenHandler, Slot slot) {
+        return addSlot(new Slot(slot.inventory, slot.getIndex(), slot.x, slot.y) {
+            @Override
+            public boolean canInsert(ItemStack stack) {
+                return super.canInsert(stack) || (Config.GRINDSTONE_EXTRACT_TREASURE && stack.isOf(Items.BOOK));
+            }
+        });
+    }
+
+//    @Mixin(targets = "net.minecraft.screen.GrindstoneScreenHandler$4")
+//    public static class ResultSlotMixin {
+//        @Inject(method = "getExperience(Lnet/minecraft/item/ItemStack;)I", at = @At("HEAD"), cancellable = true)
+//        public void nullExperience(ItemStack stack, CallbackInfoReturnable<Integer> cir) {
+//            if (Config.GRINDSTONE_DISABLE_XP) {
+//                cir.setReturnValue(0);
+//                cir.cancel();
 //            }
-//            this.result.setStack(0, result);
-//            this.sendContentUpdates();
-//            ci.cancel();
 //        }
 //    }
-
-    @Mixin(targets = "net.minecraft.screen.GrindstoneScreenHandler$3")
-    public static class SecondSlotMixin extends Slot {
-        public SecondSlotMixin(Inventory inventory, int index, int x, int y) {
-            super(inventory, index, x, y);
-        }
-
-        @Inject(method = "canInsert(Lnet/minecraft/item/ItemStack;)Z", at = @At("RETURN"), cancellable = true)
-        public void canInsertBook(ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
-            cir.setReturnValue(cir.getReturnValue() || (Config.GRINDSTONE_EXTRACT_TREASURE && stack.isOf(Items.BOOK)));
-        }
-
-        /*
-        @Override
-        public int getMaxItemCount(ItemStack stack) {
-            return stack.isOf(Items.BOOK) ? Math.min(1, super.getMaxItemCount(stack)) : super.getMaxItemCount(stack);
-        }
-         */
-    }
-
-    @Mixin(targets = "net.minecraft.screen.GrindstoneScreenHandler$4")
-    public static class ResultSlotMixin {
-        @Inject(method = "getExperience(Lnet/minecraft/item/ItemStack;)I", at = @At("HEAD"), cancellable = true)
-        public void nullExperience(ItemStack stack, CallbackInfoReturnable<Integer> cir) {
-            if (Config.GRINDSTONE_DISABLE_XP) {
-                cir.setReturnValue(0);
-                cir.cancel();
-            }
-        }
-    }
 }
